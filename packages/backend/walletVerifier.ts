@@ -1,9 +1,8 @@
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-import axios from "axios";
+import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
+import axios from 'axios';
 
 // Query is hard-coded now. It should be configurable.
-const endpoint =
-  "https://api.thegraph.com/subgraphs/name/messari/quickswap-polygon";
+const endpoint = 'https://api.thegraph.com/subgraphs/name/messari/quickswap-polygon';
 
 const tokensQuery = `
 query Account($address: String!) {
@@ -23,8 +22,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
   const response = await axios({
     url: endpoint,
-    method: "POST",
-    headers: { "content-type": "application/json" },
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
     data: graphqlQuery,
   });
 
