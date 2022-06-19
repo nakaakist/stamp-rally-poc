@@ -1,0 +1,21 @@
+{
+  "name": "stamp-rally-poc-backend",
+  "version": "1.0.0",
+  "description": "<!-- title: 'AWS Simple HTTP Endpoint example in NodeJS' description: 'This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.' layout: Doc framework: v3 platform: AWS language: nodeJS authorLink: 'https://github.com/serverless' authorName: 'Serverless, inc.' authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4' -->",
+  "main": "check-wallet.js",
+  "scripts": {
+    "deploy": "npx sls deploy",
+    "run": "npx sls invoke local --function walletVerifier --path ./test-event.json"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.100",
+    "serverless": "^3.19.0",
+    "serverless-plugin-monorepo": "^0.11.0",
+    "serverless-plugin-typescript": "1.1.6"
+  },
+  "dependencies": {
+    "axios": "^0.27.2"
+  }
+}
