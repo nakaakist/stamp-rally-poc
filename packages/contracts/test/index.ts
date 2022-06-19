@@ -84,6 +84,7 @@ describe('Token distributor', function () {
     await claimTx.wait();
 
     expect(await token.balanceOf(randomPerson.address)).to.equal(50);
+    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(50);
   });
 
   it('Should transfer additional token on claim if cumulativeAmount is increased by owner', async () => {
@@ -115,6 +116,7 @@ describe('Token distributor', function () {
 
     expect(balance1).to.equal(50);
     expect(balance2).to.equal(70);
+    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(70);
   });
 
   it('Should fail on duplicate transfer', async () => {
@@ -133,6 +135,7 @@ describe('Token distributor', function () {
       'Nothing to claim',
     );
     expect(await token.balanceOf(randomPerson.address)).to.equal(50);
+    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(50);
   });
 
   it('Should fail on claim with invalid signature (invalid cumulativeAmount)', async () => {
@@ -147,6 +150,8 @@ describe('Token distributor', function () {
     await expect(distributor.claim(randomPerson.address, 50, signature)).to.be.revertedWith(
       'Invalid signature',
     );
+    expect(await token.balanceOf(randomPerson.address)).to.equal(0);
+    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
   });
 
   it('Should fail on claim with invalid signature (invalid signer)', async () => {
@@ -161,6 +166,8 @@ describe('Token distributor', function () {
     await expect(distributor.claim(randomPerson.address, 50, signature)).to.be.revertedWith(
       'Invalid signature',
     );
+    expect(await token.balanceOf(randomPerson.address)).to.equal(0);
+    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
   });
 
   it('Should fail on claim if token balance of distributor is not enough', async () => {
@@ -175,5 +182,7 @@ describe('Token distributor', function () {
     await expect(distributor.claim(randomPerson.address, 150, signature)).to.be.revertedWith(
       'ERC20: transfer amount exceeds balance',
     );
+    expect(await token.balanceOf(randomPerson.address)).to.equal(0);
+    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
   });
 });
