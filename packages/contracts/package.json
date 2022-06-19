@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npx hardhat test",
     "start:local": "npx hardhat node",
     "deploy:local": "npx hardhat run --network localhost scripts/deploy.ts",
     "console:local": "npx hardhat console --network localhost"

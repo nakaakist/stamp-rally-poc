@@ -48,7 +48,7 @@ contract RewardDistributor is EIP712, Ownable {
       _hashTypedDataV4(
         keccak256(
           abi.encode(
-            keccak256('Reward(uint256 account,address cumulativeAmount)'),
+            keccak256('Reward(address account,uint256 cumulativeAmount)'),
             account,
             cumulativeAmount
           )
