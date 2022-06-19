@@ -14,7 +14,6 @@
   ],
   "devDependencies": {
     "typescript": "^4.7.4",
-    "dotenv": "^16.0.1",
     "eslint": "^7.32.0",
     "prettier": "^2.7.1"
   }
