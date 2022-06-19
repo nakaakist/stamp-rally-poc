@@ -5,17 +5,19 @@
   "main": "check-wallet.js",
   "scripts": {
     "deploy": "npx sls deploy",
-    "run": "npx sls invoke local --function walletVerifier --path ./test-event.json"
+    "run:local": "npx sls invoke local --function walletVerifier --path ./test-event.json"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.100",
     "serverless": "^3.19.0",
+    "serverless-dotenv-plugin": "^4.0.1",
     "serverless-plugin-typescript": "1.1.6",
     "typescript": "4.7.4"
   },
   "dependencies": {
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "ethers": "5.6.9"
   }
 }
