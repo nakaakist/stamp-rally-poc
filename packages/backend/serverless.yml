@@ -7,7 +7,6 @@ provider:
   region: ap-northeast-1
 
 plugins:
-  - serverless-plugin-monorepo
   - serverless-plugin-typescript
 
 functions:
