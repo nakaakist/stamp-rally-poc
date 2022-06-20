@@ -18,6 +18,11 @@ const cumulativeAmount = 10;
 
 const toAccountForSignature = (account: string) => '0x' + account.slice(2).toUpperCase();
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Credentials': true,
+};
+
 const getSignature = async (params: {
   signer: Wallet;
   chainId: number;
@@ -70,6 +75,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({ eligible: false }),
+      headers: corsHeaders,
     };
   }
 
@@ -92,5 +98,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify({ eligible: true, signature, account, cumulativeAmount }),
+    headers: corsHeaders,
   };
 };

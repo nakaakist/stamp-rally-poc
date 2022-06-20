@@ -71,4 +71,7 @@ contract RewardDistributor is EIP712, Ownable {
   function _verify(bytes32 digest, bytes calldata signature) internal view returns (bool) {
     return owner() == ECDSA.recover(digest, signature);
   }
+
+  // receive() is required for the contract to receive ETH
+  receive() external payable {}
 }
