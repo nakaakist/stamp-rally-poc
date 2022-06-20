@@ -7,6 +7,7 @@
     "test": "npx hardhat test",
     "start:local": "npx hardhat node",
     "deploy:local": "npx hardhat run --network localhost scripts/deploy.ts",
+    "deploy:goerli": "npx hardhat run --network goerli scripts/deploy.ts",
     "console:local": "npx hardhat console --network localhost"
   },
   "author": "",
