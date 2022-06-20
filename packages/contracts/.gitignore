@@ -7,3 +7,6 @@ typechain
 #Hardhat files
 cache
 artifacts
+
+# temporary argument file
+.constructorArgs.ts
