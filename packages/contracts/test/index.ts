@@ -185,4 +185,23 @@ describe('Token distributor', function () {
     expect(await token.balanceOf(randomPerson.address)).to.equal(0);
     expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
   });
+
+  it('Should succeed on resetting claimed amount', async () => {
+    const signature = await getSignature({
+      owner,
+      distributor,
+      chainId,
+      account: randomPerson.address,
+      cumulativeAmount: 50,
+    });
+
+    const claimTx = await distributor.claim(randomPerson.address, 50, signature);
+    await claimTx.wait();
+
+    const resetTx = await distributor.resetClaimedAmount(randomPerson.address);
+    await resetTx.wait();
+
+    expect(await token.balanceOf(randomPerson.address)).to.equal(50);
+    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
+  });
 });

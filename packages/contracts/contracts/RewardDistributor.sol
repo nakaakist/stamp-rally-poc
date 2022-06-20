@@ -22,6 +22,10 @@ contract RewardDistributor is EIP712, Ownable {
     console.log('Deploying a distributor');
   }
 
+  function resetClaimedAmount(address account) public onlyOwner {
+    cumulativeClaimedAmounts[account] = 0;
+  }
+
   function claim(
     address account,
     uint256 cumulativeAmount,

@@ -3,10 +3,10 @@ import axios from 'axios';
 import { ethers, Wallet } from 'ethers';
 
 // Query is hard-coded now. It should be configurable.
-const endpoint = 'https://api.thegraph.com/subgraphs/name/messari/quickswap-polygon';
+const endpoint = 'https://api.thegraph.com/subgraphs/name/messari/sushiswap-ethereum';
 
 const tokensQuery = `
-query Account($address: String!) {
+query account($address: String!) {
 account(id: $address) {
   id
 }
@@ -15,6 +15,8 @@ account(id: $address) {
 
 // cumulative reward amount is hard-coded now. It should be configurable.
 const cumulativeAmount = 10;
+
+const toAccountForSignature = (account: string) => '0x' + account.slice(2).toUpperCase();
 
 const getSignature = async (params: {
   signer: Wallet;
@@ -46,13 +48,13 @@ const getSignature = async (params: {
 };
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-  const address = event.pathParameters?.address;
+  const address = event.pathParameters?.address || '';
 
   // check if wallet is eligible for reward
 
   const graphqlQuery = {
     query: tokensQuery,
-    variables: { address },
+    variables: { address: address.toLowerCase() },
   };
 
   const response = await axios({
@@ -62,7 +64,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     data: graphqlQuery,
   });
 
-  const account = response.data?.data?.account || '0xD35Ae4c64C1AD955Fd2EBCFb77721700b8064294'; // dummy account
+  const account = response.data?.data?.account?.id;
 
   if (!account) {
     return {
@@ -83,7 +85,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     signer,
     chainId: parseInt(process.env.CHAIN_ID || '0'),
     distributorAddress: process.env.DISTRIBUTOR_ADDRESS || '',
-    account,
+    account: toAccountForSignature(account.toString()),
     cumulativeAmount,
   });
 
