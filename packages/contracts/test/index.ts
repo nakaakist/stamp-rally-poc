@@ -5,9 +5,18 @@ import { ethers } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
 import { RewardDistributor, TestERC20Token } from '../typechain';
 
-const deployDistributor = async (token: string) => {
+const deployDistributorForERC20 = async (token: string) => {
   const Contract = await ethers.getContractFactory('RewardDistributor');
-  const contract = await Contract.deploy(token);
+  const contract = await Contract.deploy(true, token);
+  await contract.deployed();
+  return contract;
+};
+
+const deployDistributorForNonERC20 = async () => {
+  const Contract = await ethers.getContractFactory('RewardDistributor');
+  const contract = await Contract.deploy(false, '0x0000000000000000000000000000000000000000', {
+    value: ethers.utils.parseEther('0.1'),
+  });
   await contract.deployed();
   return contract;
 };
@@ -63,145 +72,170 @@ describe('Token distributor', function () {
     chainId = network.chainId;
   });
 
-  beforeEach(async () => {
-    token = await deployToken(100);
-    distributor = await deployDistributor(token.address);
+  describe('ERC20', () => {
+    beforeEach(async () => {
+      token = await deployToken(100);
+      distributor = await deployDistributorForERC20(token.address);
 
-    const depositTx = await token.transfer(distributor.address, 100);
-    await depositTx.wait();
+      const depositTx = await token.transfer(distributor.address, 100);
+      await depositTx.wait();
+    });
+
+    it('Should transfer token on claim with valid signature', async () => {
+      const signature = await getSignature({
+        owner,
+        chainId,
+        distributor,
+        account: randomPerson.address,
+        cumulativeAmount: 50,
+      });
+
+      const claimTx = await distributor.claim(randomPerson.address, 50, signature);
+      await claimTx.wait();
+
+      expect(await token.balanceOf(randomPerson.address)).to.equal(50);
+      expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(50);
+    });
+
+    it('Should transfer additional token on claim if cumulativeAmount is increased by owner', async () => {
+      const signature = await getSignature({
+        owner,
+        distributor,
+        chainId,
+        account: randomPerson.address,
+        cumulativeAmount: 50,
+      });
+
+      const claimTx = await distributor.claim(randomPerson.address, 50, signature);
+      await claimTx.wait();
+
+      const balance1 = await token.balanceOf(randomPerson.address);
+
+      const signature2 = await getSignature({
+        owner,
+        distributor,
+        chainId,
+        account: randomPerson.address,
+        cumulativeAmount: 70,
+      });
+
+      const claimTx2 = await distributor.claim(randomPerson.address, 70, signature2);
+      await claimTx2.wait();
+
+      const balance2 = await token.balanceOf(randomPerson.address);
+
+      expect(balance1).to.equal(50);
+      expect(balance2).to.equal(70);
+      expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(70);
+    });
+
+    it('Should fail on duplicate transfer', async () => {
+      const signature = await getSignature({
+        owner,
+        distributor,
+        chainId,
+        account: randomPerson.address,
+        cumulativeAmount: 50,
+      });
+
+      const claimTx = await distributor.claim(randomPerson.address, 50, signature);
+      await claimTx.wait();
+
+      await expect(distributor.claim(randomPerson.address, 50, signature)).to.be.revertedWith(
+        'Nothing to claim',
+      );
+      expect(await token.balanceOf(randomPerson.address)).to.equal(50);
+      expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(50);
+    });
+
+    it('Should fail on claim with invalid signature (invalid cumulativeAmount)', async () => {
+      const signature = await getSignature({
+        owner,
+        distributor,
+        chainId,
+        account: randomPerson.address,
+        cumulativeAmount: 70,
+      });
+
+      await expect(distributor.claim(randomPerson.address, 50, signature)).to.be.revertedWith(
+        'Invalid signature',
+      );
+      expect(await token.balanceOf(randomPerson.address)).to.equal(0);
+      expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
+    });
+
+    it('Should fail on claim with invalid signature (invalid signer)', async () => {
+      const signature = await getSignature({
+        owner: randomPerson,
+        distributor,
+        chainId,
+        account: randomPerson.address,
+        cumulativeAmount: 50,
+      });
+
+      await expect(distributor.claim(randomPerson.address, 50, signature)).to.be.revertedWith(
+        'Invalid signature',
+      );
+      expect(await token.balanceOf(randomPerson.address)).to.equal(0);
+      expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
+    });
+
+    it('Should fail on claim if token balance of distributor is not enough', async () => {
+      const signature = await getSignature({
+        owner,
+        distributor,
+        chainId,
+        account: randomPerson.address,
+        cumulativeAmount: 150,
+      });
+
+      await expect(distributor.claim(randomPerson.address, 150, signature)).to.be.revertedWith(
+        'ERC20: transfer amount exceeds balance',
+      );
+      expect(await token.balanceOf(randomPerson.address)).to.equal(0);
+      expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
+    });
+
+    it('Should succeed on resetting claimed amount', async () => {
+      const signature = await getSignature({
+        owner,
+        distributor,
+        chainId,
+        account: randomPerson.address,
+        cumulativeAmount: 50,
+      });
+
+      const claimTx = await distributor.claim(randomPerson.address, 50, signature);
+      await claimTx.wait();
+
+      const resetTx = await distributor.resetClaimedAmount(randomPerson.address);
+      await resetTx.wait();
+
+      expect(await token.balanceOf(randomPerson.address)).to.equal(50);
+      expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
+    });
   });
 
-  it('Should transfer token on claim with valid signature', async () => {
-    const signature = await getSignature({
-      owner,
-      chainId,
-      distributor,
-      account: randomPerson.address,
-      cumulativeAmount: 50,
+  describe('non-ERC20', () => {
+    beforeEach(async () => {
+      token = await deployToken(100);
+      distributor = await deployDistributorForNonERC20();
     });
 
-    const claimTx = await distributor.claim(randomPerson.address, 50, signature);
-    await claimTx.wait();
+    it('Should transfer token on claim with valid signature', async () => {
+      const signature = await getSignature({
+        owner,
+        chainId,
+        distributor,
+        account: randomPerson.address,
+        cumulativeAmount: 50,
+      });
 
-    expect(await token.balanceOf(randomPerson.address)).to.equal(50);
-    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(50);
-  });
+      const claimTx = await distributor.claim(randomPerson.address, 50, signature);
+      await claimTx.wait();
 
-  it('Should transfer additional token on claim if cumulativeAmount is increased by owner', async () => {
-    const signature = await getSignature({
-      owner,
-      distributor,
-      chainId,
-      account: randomPerson.address,
-      cumulativeAmount: 50,
+      expect((await randomPerson.getBalance()).toString()).to.equal('10000000000000000000050');
+      expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(50);
     });
-
-    const claimTx = await distributor.claim(randomPerson.address, 50, signature);
-    await claimTx.wait();
-
-    const balance1 = await token.balanceOf(randomPerson.address);
-
-    const signature2 = await getSignature({
-      owner,
-      distributor,
-      chainId,
-      account: randomPerson.address,
-      cumulativeAmount: 70,
-    });
-
-    const claimTx2 = await distributor.claim(randomPerson.address, 70, signature2);
-    await claimTx2.wait();
-
-    const balance2 = await token.balanceOf(randomPerson.address);
-
-    expect(balance1).to.equal(50);
-    expect(balance2).to.equal(70);
-    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(70);
-  });
-
-  it('Should fail on duplicate transfer', async () => {
-    const signature = await getSignature({
-      owner,
-      distributor,
-      chainId,
-      account: randomPerson.address,
-      cumulativeAmount: 50,
-    });
-
-    const claimTx = await distributor.claim(randomPerson.address, 50, signature);
-    await claimTx.wait();
-
-    await expect(distributor.claim(randomPerson.address, 50, signature)).to.be.revertedWith(
-      'Nothing to claim',
-    );
-    expect(await token.balanceOf(randomPerson.address)).to.equal(50);
-    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(50);
-  });
-
-  it('Should fail on claim with invalid signature (invalid cumulativeAmount)', async () => {
-    const signature = await getSignature({
-      owner,
-      distributor,
-      chainId,
-      account: randomPerson.address,
-      cumulativeAmount: 70,
-    });
-
-    await expect(distributor.claim(randomPerson.address, 50, signature)).to.be.revertedWith(
-      'Invalid signature',
-    );
-    expect(await token.balanceOf(randomPerson.address)).to.equal(0);
-    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
-  });
-
-  it('Should fail on claim with invalid signature (invalid signer)', async () => {
-    const signature = await getSignature({
-      owner: randomPerson,
-      distributor,
-      chainId,
-      account: randomPerson.address,
-      cumulativeAmount: 50,
-    });
-
-    await expect(distributor.claim(randomPerson.address, 50, signature)).to.be.revertedWith(
-      'Invalid signature',
-    );
-    expect(await token.balanceOf(randomPerson.address)).to.equal(0);
-    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
-  });
-
-  it('Should fail on claim if token balance of distributor is not enough', async () => {
-    const signature = await getSignature({
-      owner,
-      distributor,
-      chainId,
-      account: randomPerson.address,
-      cumulativeAmount: 150,
-    });
-
-    await expect(distributor.claim(randomPerson.address, 150, signature)).to.be.revertedWith(
-      'ERC20: transfer amount exceeds balance',
-    );
-    expect(await token.balanceOf(randomPerson.address)).to.equal(0);
-    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
-  });
-
-  it('Should succeed on resetting claimed amount', async () => {
-    const signature = await getSignature({
-      owner,
-      distributor,
-      chainId,
-      account: randomPerson.address,
-      cumulativeAmount: 50,
-    });
-
-    const claimTx = await distributor.claim(randomPerson.address, 50, signature);
-    await claimTx.wait();
-
-    const resetTx = await distributor.resetClaimedAmount(randomPerson.address);
-    await resetTx.wait();
-
-    expect(await token.balanceOf(randomPerson.address)).to.equal(50);
-    expect(await distributor.cumulativeClaimedAmounts(randomPerson.address)).to.equal(0);
   });
 });

@@ -10,6 +10,8 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 contract RewardDistributor is EIP712, Ownable {
   using SafeERC20 for IERC20;
 
+  // Whether the reward is ERC20 token or not (if not, ETH is used)
+  bool public isUsingERC20Token;
   // ERC20 token address to use as rewards
   address public token;
   // Mapping between addresses and the total reward amounts given to them so far
@@ -17,7 +19,8 @@ contract RewardDistributor is EIP712, Ownable {
 
   event Claimed(address indexed account, uint256 cumulativeAmount, uint256 amount);
 
-  constructor(address token_) EIP712('stamp-rally-poc', '0.0.1') {
+  constructor(bool isUsingERC20Token_, address token_) payable EIP712('stamp-rally-poc', '0.0.1') {
+    isUsingERC20Token = isUsingERC20Token_;
     token = token_;
     console.log('Deploying a distributor');
   }
@@ -42,7 +45,12 @@ contract RewardDistributor is EIP712, Ownable {
 
     // Send the token
     uint256 amount = cumulativeAmount - preclaimed;
-    IERC20(token).safeTransfer(account, amount);
+    if (isUsingERC20Token) {
+      IERC20(token).safeTransfer(account, amount);
+    } else {
+      (bool success, ) = (account).call{value: amount}('');
+      require(success, 'Failed to transfer eth');
+    }
 
     emit Claimed(account, cumulativeAmount, amount);
   }
