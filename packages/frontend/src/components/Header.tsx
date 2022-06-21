@@ -17,20 +17,19 @@ const Account = () => {
 };
 
 export const Header = () => (
-  <header>
-    <Flex
-      position="fixed"
-      width="100vw"
-      height={HEADER_HEIGHT}
-      justify="space-between"
-      align="center"
-      py="1"
-      px="8"
-      bg="white"
-      boxShadow="0px 2px 4px rgba(0, 0, 0, 0.1)"
-    >
-      <Heading fontSize="xl">Stamp Rally PoC</Heading>
-      <Account />
-    </Flex>
-  </header>
+  <Flex
+    as="header"
+    position="fixed"
+    width="100vw"
+    height={HEADER_HEIGHT}
+    justify="space-between"
+    align="center"
+    px="8"
+    bg="white"
+    borderBottomWidth="1px"
+    shadow="md"
+  >
+    <Heading fontSize="xl">Stamp Rally PoC</Heading>
+    <Account />
+  </Flex>
 );

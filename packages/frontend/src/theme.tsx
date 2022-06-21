@@ -13,12 +13,12 @@ export const theme = extendTheme({
     },
     Heading: {
       baseStyle: {
-        color: 'gray.700',
+        color: 'black',
       },
     },
     Text: {
       baseStyle: {
-        color: 'gray.700',
+        color: 'gray.600',
       },
     },
   },
