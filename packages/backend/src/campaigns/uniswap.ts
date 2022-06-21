@@ -4,7 +4,7 @@ import { CampaignRewardCalculator } from '../types';
 
 const START_TIMESTAMP = 1655748913;
 const REWARD_PER_SWAP = ethers.utils.parseEther('0.001');
-const MAX_SWAP_COUNT = 5;
+const MAX_SWAP_COUNT = 3;
 
 /**
  * Calculate the reward for uniswap swaps.

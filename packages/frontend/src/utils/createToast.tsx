@@ -1,7 +1,7 @@
 import { createStandaloneToast, UseToastOptions } from '@chakra-ui/react';
 
-export const createToast = (params: UseToastOptions) => {
+export const createToast = ({ position = 'bottom-right', ...params }: UseToastOptions) => {
   const { toast } = createStandaloneToast();
 
-  toast(params);
+  toast({ position, ...params });
 };

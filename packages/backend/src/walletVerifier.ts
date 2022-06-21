@@ -18,14 +18,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   // calculate the cumulative reward amount
   const { amount: cumulativeAmount, completedStepNum } = await uniswapRewardCalculator(account);
 
-  if (!cumulativeAmount) {
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ eligible: false }),
-      headers: corsHeaders,
-    };
-  }
-
   // generate a signature to authorize reward claim
   const signature = await getSignature({
     signerPrivateKey: process.env.OWNER_PRIVATE_KEY || '',

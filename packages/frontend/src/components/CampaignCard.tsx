@@ -2,15 +2,18 @@ import { CheckCircleIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
+  Divider,
   Heading,
-  HStack,
+  Link,
   List,
   ListIcon,
   ListItem,
+  Spinner,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { utils } from 'ethers';
+import { ReactNode, useEffect, useState } from 'react';
 import { GAS_LIMIT, WALLET_VERIFIER_URL } from '../constants/constants';
 import { useAccount } from '../hooks/useAccount';
 import { useDistributorContract } from '../hooks/useDistributorContract';
@@ -20,7 +23,7 @@ const Step = (props: {
   stepNum: number;
   isLast?: boolean;
   achieved: boolean;
-  description: string;
+  description: ReactNode;
   reward: string;
 }) => (
   <>
@@ -31,7 +34,7 @@ const Step = (props: {
           w="5"
           h="5"
           mr="4"
-          color={props.achieved ? 'teal.300' : 'gray.300'}
+          color={props.achieved ? 'green.400' : 'gray.300'}
         />
         <Box w="100%">
           <Heading size="xs" display="block" mb="1">
@@ -46,72 +49,131 @@ const Step = (props: {
 );
 
 export const CampaignCard = () => {
-  const [data, setData] = useState<{
-    cumulativeAmount: number;
+  const [verifiedData, setVerifiedData] = useState<{
+    cumulativeAmount: string;
     signature: string;
     completedStepNum: number;
   } | null>(null);
+  const [claimedAmount, setClaimedAmount] = useState<string | null>(null);
   const { account } = useAccount();
   const { contract } = useDistributorContract();
 
-  const checkEligibility = async () => {
+  const claimableAmount =
+    parseFloat(verifiedData?.cumulativeAmount || '0') - parseFloat(claimedAmount || '0');
+
+  const verify = async () => {
     if (!account) return;
 
-    const res = await fetch(`${WALLET_VERIFIER_URL}/${account}`);
-    const data = await res.json();
+    try {
+      const res = await fetch(`${WALLET_VERIFIER_URL}/${account}`);
+      const data = await res.json();
 
-    if (data.eligible) {
-      setData({
-        cumulativeAmount: data.cumulativeAmount || 0,
+      setVerifiedData({
+        cumulativeAmount: utils.formatEther(data.cumulativeAmount || '0'),
         signature: data.signature || '',
         completedStepNum: data.completedStepNum || 0,
       });
+    } catch (error) {
       createToast({
-        title: `You completed ${data.completedStepNum || 0} steps!`,
-        description: 'You can claim reward',
-        status: 'success',
+        title: 'Failed to check reward eligibility',
+        status: 'error',
+      });
+    }
+  };
+
+  const checkClaimedAmount = async () => {
+    if (!contract || !account) return;
+
+    try {
+      const amount: number = await contract.cumulativeClaimedAmounts(account);
+      setClaimedAmount(utils.formatEther(amount));
+    } catch (error) {
+      createToast({
+        title: 'Failed to check claimed amount',
+        status: 'error',
       });
     }
   };
 
   const claimReward = async () => {
-    if (!contract || !data) return;
+    if (!contract || !verifiedData) return;
 
-    const tx = await contract.claim(account, data.cumulativeAmount, data.signature, {
-      gasLimit: GAS_LIMIT,
-    });
+    const tx = await contract.claim(
+      account,
+      verifiedData.cumulativeAmount,
+      verifiedData.signature,
+      {
+        gasLimit: GAS_LIMIT,
+      },
+    );
 
     await tx.wait();
   };
+
+  useEffect(() => {
+    verify();
+  }, [account]);
+
+  useEffect(() => {
+    checkClaimedAmount();
+  }, [account, contract]);
+
   return (
     <Box w="100%" borderWidth="1px" borderRadius="8" p="8" shadow="md">
       <VStack spacing="5" align="start" w="100%">
-        <Heading size="lg">Swap five times in Görli</Heading>
+        <Heading size="lg">Swap three times in Görli Uniswap</Heading>
         <Text textAlign="justify">
           This is an example stamp rally campaign. It is just a boring stamp rally in a single
-          protocol because of the limited availability of subgraphs in the test network.
+          protocol because of the limited availability of subgraphs in the Görli network.
           <br />
           However, it can be easily extended to cross-protocol with appropriate subgraphs.
         </Text>
+
+        <Divider />
+
         <List spacing="1" w="100%">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <Step
               stepNum={i + 1}
-              achieved={(data?.completedStepNum || 0) > i}
-              description="Swap any amount of ETH to UNI in Uniswap Görli"
+              achieved={(verifiedData?.completedStepNum || 0) > i}
+              description={
+                <>
+                  Swap any amount of ETH to UNI in{' '}
+                  <Link
+                    href="https://app.uniswap.org/#/swap?chain=goerli"
+                    isExternal
+                    color="blue.500"
+                  >
+                    Görli Uniswap
+                  </Link>
+                </>
+              }
               reward="0.001 ETH"
-              isLast={i === 4}
+              isLast={i === 2}
             />
           ))}
         </List>
 
-        <HStack>
-          <Button onClick={checkEligibility}>Check reward eligibility</Button>
+        <Divider />
 
-          <Button className="button" onClick={claimReward}>
-            Claim reward
+        <VStack w="100%" align="flex-start" spacing="5">
+          <Box>
+            <Text>Your total reward now</Text>
+            {verifiedData != null && claimedAmount != null ? (
+              <>
+                <Heading size="lg" as="span" mr="2">
+                  {verifiedData.cumulativeAmount} ETH
+                </Heading>
+                <Text as="span"> / {claimedAmount} ETH already claimed</Text>
+              </>
+            ) : (
+              <Spinner />
+            )}
+          </Box>
+          <Button mt="3" onClick={claimReward} disabled={!claimableAmount}>
+            Claim {claimableAmount} ETH now
           </Button>
-        </HStack>
+        </VStack>
       </VStack>
     </Box>
   );
