@@ -40,11 +40,12 @@ export const uniswapRewardCalculator: CampaignRewardCalculator = async (account:
 
   const swaps = response.data?.data?.swaps;
 
-  if (!swaps || swaps.length === 0) {
-    return null;
+  if (!swaps) {
+    return { amount: BigNumber.from(0), completedStepNum: 0 };
   }
 
-  const amount = BigNumber.from(Math.min(MAX_SWAP_COUNT, swaps.length)).mul(REWARD_PER_SWAP);
+  const completedStepNum = swaps.length;
+  const amount = BigNumber.from(Math.min(MAX_SWAP_COUNT, completedStepNum)).mul(REWARD_PER_SWAP);
 
-  return amount;
+  return { amount, completedStepNum };
 };

@@ -1,9 +1,20 @@
 import { CheckCircleIcon, ChevronDownIcon } from '@chakra-ui/icons';
-import { Box, Button, Heading, List, ListIcon, ListItem, Text, VStack } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Heading,
+  HStack,
+  List,
+  ListIcon,
+  ListItem,
+  Text,
+  VStack,
+} from '@chakra-ui/react';
 import { useState } from 'react';
 import { GAS_LIMIT, WALLET_VERIFIER_URL } from '../constants/constants';
 import { useAccount } from '../hooks/useAccount';
 import { useDistributorContract } from '../hooks/useDistributorContract';
+import { createToast } from '../utils/createToast';
 
 const Step = (props: {
   stepNum: number;
@@ -35,7 +46,11 @@ const Step = (props: {
 );
 
 export const CampaignCard = () => {
-  const [data, setData] = useState<{ cumulativeAmount: number; signature: string } | null>(null);
+  const [data, setData] = useState<{
+    cumulativeAmount: number;
+    signature: string;
+    completedStepNum: number;
+  } | null>(null);
   const { account } = useAccount();
   const { contract } = useDistributorContract();
 
@@ -45,12 +60,16 @@ export const CampaignCard = () => {
     const res = await fetch(`${WALLET_VERIFIER_URL}/${account}`);
     const data = await res.json();
 
-    window.alert(JSON.stringify(data));
-
     if (data.eligible) {
       setData({
         cumulativeAmount: data.cumulativeAmount || 0,
         signature: data.signature || '',
+        completedStepNum: data.completedStepNum || 0,
+      });
+      createToast({
+        title: `You completed ${data.completedStepNum || 0} steps!`,
+        description: 'You can claim reward',
+        status: 'success',
       });
     }
   };
@@ -75,44 +94,24 @@ export const CampaignCard = () => {
           However, it can be easily extended to cross-protocol with appropriate subgraphs.
         </Text>
         <List spacing="1" w="100%">
-          <Step
-            stepNum={1}
-            achieved={true}
-            description="Swap any amount of ETH to UNI in Uniswap Görli"
-            reward="0.001 ETH"
-          />
-          <Step
-            stepNum={2}
-            achieved={false}
-            description="Swap any amount of ETH to UNI in Uniswap Görli"
-            reward="0.001 ETH"
-          />
-          <Step
-            stepNum={3}
-            achieved={false}
-            description="Swap any amount of ETH to UNI in Uniswap Görli"
-            reward="0.001 ETH"
-          />
-          <Step
-            stepNum={4}
-            achieved={false}
-            description="Swap any amount of ETH to UNI in Uniswap Görli"
-            reward="0.001 ETH"
-          />
-          <Step
-            stepNum={5}
-            isLast
-            achieved={false}
-            description="Swap any amount of ETH to UNI in Uniswap Görli"
-            reward="0.001 ETH"
-          />
+          {[...Array(5)].map((_, i) => (
+            <Step
+              stepNum={i + 1}
+              achieved={(data?.completedStepNum || 0) > i}
+              description="Swap any amount of ETH to UNI in Uniswap Görli"
+              reward="0.001 ETH"
+              isLast={i === 4}
+            />
+          ))}
         </List>
 
-        <Button onClick={checkEligibility}>Check reward eligibility</Button>
+        <HStack>
+          <Button onClick={checkEligibility}>Check reward eligibility</Button>
 
-        <Button className="button" onClick={claimReward}>
-          Claim reward
-        </Button>
+          <Button className="button" onClick={claimReward}>
+            Claim reward
+          </Button>
+        </HStack>
       </VStack>
     </Box>
   );

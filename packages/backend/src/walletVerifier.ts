@@ -16,7 +16,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   const account = event.pathParameters?.address || '';
 
   // calculate the cumulative reward amount
-  const cumulativeAmount = await uniswapRewardCalculator(account);
+  const { amount: cumulativeAmount, completedStepNum } = await uniswapRewardCalculator(account);
 
   if (!cumulativeAmount) {
     return {
@@ -45,6 +45,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       signature,
       account,
       cumulativeAmount: cumulativeAmount.toString(),
+      completedStepNum,
     }),
     headers: corsHeaders,
   };
