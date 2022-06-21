@@ -18,9 +18,9 @@ plugins:
 
 functions:
   walletVerifier:
-    handler: walletVerifier.handler
+    handler: src/walletVerifier.handler
     events:
-      - httpApi:
+      - http:
           path: /{address}
           method: get
           cors: true

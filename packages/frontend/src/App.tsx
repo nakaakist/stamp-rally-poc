@@ -1,8 +1,7 @@
 import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
-import abi from './abi.json';
-
-const contractAddress = '0x6BdAb809c7521262f562B33192E381D1673e2a36';
+import { DISTRIBUTOR_ADDRESS, GAS_LIMIT, WALLET_VERIFIER_URL } from './constants/constants';
+import DIATRIBUTOR_ABI from './constants/distributorAbi.json';
 
 const getContract = () => {
   const { ethereum } = window;
@@ -11,7 +10,7 @@ const getContract = () => {
 
   const provider = new ethers.providers.Web3Provider(ethereum);
   const signer = provider.getSigner();
-  const contract = new ethers.Contract(contractAddress, abi, signer);
+  const contract = new ethers.Contract(DISTRIBUTOR_ADDRESS, DIATRIBUTOR_ABI, signer);
 
   return contract;
 };
@@ -43,9 +42,7 @@ const App = () => {
   const checkEligibility = async () => {
     if (!account) return;
 
-    const res = await fetch(
-      `https://qc0212an7l.execute-api.ap-northeast-1.amazonaws.com/${account}`,
-    );
+    const res = await fetch(`${WALLET_VERIFIER_URL}/${account}`);
     const data = await res.json();
 
     window.alert(JSON.stringify(data));
@@ -64,10 +61,10 @@ const App = () => {
     if (!contract || !data) return;
 
     const tx = await contract.claim(account, data.cumulativeAmount, data.signature, {
-      gasLimit: 300000,
+      gasLimit: GAS_LIMIT,
     });
 
-    const result = await tx.wait();
+    await tx.wait();
   };
 
   useEffect(() => {
