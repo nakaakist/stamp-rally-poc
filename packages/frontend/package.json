@@ -8,7 +8,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@chakra-ui/icons": "^2.0.2",
+    "@chakra-ui/react": "^2.2.1",
+    "@emotion/react": "^11.9.3",
+    "@emotion/styled": "^11.9.3",
     "ethers": "^5.6.9",
+    "framer-motion": "^6.3.12",
+    "jotai": "^1.7.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

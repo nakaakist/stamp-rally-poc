@@ -1,7 +1,7 @@
-import { ExternalProvider } from 'ethers';
+import { providers } from 'ethers';
 
 declare global {
   interface Window {
-    ethereum?: ExternalProvider;
+    ethereum?: providers.ExternalProvider;
   }
 }
