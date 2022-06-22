@@ -48,23 +48,58 @@ const Step = (props: {
   </>
 );
 
+const ClaimButton = (props: {
+  onClick: () => void;
+  isClaiming: boolean;
+  isLoading: boolean;
+  claimableAmount: number;
+}) => (
+  <Button
+    mt="3"
+    onClick={props.onClick}
+    disabled={props.isLoading || props.isClaiming || !props.claimableAmount}
+  >
+    {props.isClaiming && (
+      <>
+        <Spinner as="span" mr="2" />
+        Claiming...
+      </>
+    )}
+    {props.isLoading ? (
+      <Spinner as="span" mr="2" />
+    ) : props.claimableAmount > 0 ? (
+      `Claim ${props.claimableAmount} ETH now`
+    ) : (
+      'Nothing to claim'
+    )}
+  </Button>
+);
+
 export const CampaignCard = () => {
   const [verifiedData, setVerifiedData] = useState<{
     cumulativeAmount: string;
     signature: string;
     completedStepNum: number;
   } | null>(null);
+  const [isVerifying, setIsVerifying] = useState<boolean>(true);
+
   const [claimedAmount, setClaimedAmount] = useState<string | null>(null);
+  const [isGettingClaimedAmount, setIsGettingClaimedAmount] = useState<boolean>(true);
+
+  const [isClaiming, setIsClaiming] = useState<boolean>(false);
+
   const { account } = useAccount();
   const { contract } = useDistributorContract();
 
   const claimableAmount =
     parseFloat(verifiedData?.cumulativeAmount || '0') - parseFloat(claimedAmount || '0');
+  const isLoading = isVerifying || isGettingClaimedAmount;
 
   const verify = async () => {
     if (!account) return;
 
     try {
+      setIsVerifying(true);
       const res = await fetch(`${WALLET_VERIFIER_URL}/${account}`);
       const data = await res.json();
 
@@ -78,6 +113,8 @@ export const CampaignCard = () => {
         title: 'Failed to check reward eligibility',
         status: 'error',
       });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -85,6 +122,7 @@ export const CampaignCard = () => {
     if (!contract || !account) return;
 
     try {
+      setIsGettingClaimedAmount(true);
       const amount: number = await contract.cumulativeClaimedAmounts(account);
       setClaimedAmount(utils.formatEther(amount));
     } catch (error) {
@@ -92,22 +130,47 @@ export const CampaignCard = () => {
         title: 'Failed to check claimed amount',
         status: 'error',
       });
+    } finally {
+      setIsGettingClaimedAmount(false);
     }
   };
 
   const claimReward = async () => {
     if (!contract || !verifiedData) return;
 
-    const tx = await contract.claim(
-      account,
-      verifiedData.cumulativeAmount,
-      verifiedData.signature,
-      {
-        gasLimit: GAS_LIMIT,
-      },
-    );
+    try {
+      setIsClaiming(true);
+      const tx = await contract.claim(
+        account,
+        utils.parseEther(verifiedData.cumulativeAmount),
+        verifiedData.signature,
+        {
+          gasLimit: GAS_LIMIT,
+        },
+      );
 
-    await tx.wait();
+      createToast({
+        title: 'Claim submitted',
+        description: 'Please wait...',
+        status: 'success',
+      });
+
+      await tx.wait();
+
+      createToast({
+        title: 'Claim success!!',
+        description: `You've received ${claimableAmount} ETH`,
+        status: 'success',
+      });
+    } catch (error) {
+      createToast({
+        title: 'Failed to claim reward',
+        status: 'error',
+      });
+    } finally {
+      setIsClaiming(false);
+      await Promise.all([verify(), checkClaimedAmount()]);
+    }
   };
 
   useEffect(() => {
@@ -134,6 +197,7 @@ export const CampaignCard = () => {
         <List spacing="1" w="100%">
           {[...Array(3)].map((_, i) => (
             <Step
+              key={i}
               stepNum={i + 1}
               achieved={(verifiedData?.completedStepNum || 0) > i}
               description={
@@ -159,20 +223,23 @@ export const CampaignCard = () => {
         <VStack w="100%" align="flex-start" spacing="5">
           <Box>
             <Text>Your total reward now</Text>
-            {verifiedData != null && claimedAmount != null ? (
+            {isVerifying || isGettingClaimedAmount ? (
+              <Spinner />
+            ) : (
               <>
                 <Heading size="lg" as="span" mr="2">
-                  {verifiedData.cumulativeAmount} ETH
+                  {verifiedData?.cumulativeAmount} ETH
                 </Heading>
                 <Text as="span"> / {claimedAmount} ETH already claimed</Text>
               </>
-            ) : (
-              <Spinner />
             )}
           </Box>
-          <Button mt="3" onClick={claimReward} disabled={!claimableAmount}>
-            Claim {claimableAmount} ETH now
-          </Button>
+          <ClaimButton
+            onClick={claimReward}
+            isClaiming={isClaiming}
+            isLoading={isLoading}
+            claimableAmount={claimableAmount}
+          />
         </VStack>
       </VStack>
     </Box>
