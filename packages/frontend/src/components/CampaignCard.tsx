@@ -73,27 +73,33 @@ const ClaimButton = (props: {
   isClaiming: boolean;
   isLoading: boolean;
   claimableAmount: number;
-}) => (
-  <Button
-    mt="3"
-    onClick={props.onClick}
-    disabled={props.isLoading || props.isClaiming || !props.claimableAmount}
-  >
-    {props.isClaiming && (
+}) => {
+  let textElem: ReactNode;
+  if (props.isClaiming) {
+    textElem = (
       <>
         <Spinner as="span" mr="2" />
         Claiming...
       </>
-    )}
-    {props.isLoading ? (
-      <Spinner as="span" mr="2" />
-    ) : props.claimableAmount > 0 ? (
-      `Claim ${props.claimableAmount} ETH now`
-    ) : (
-      'Nothing to claim'
-    )}
-  </Button>
-);
+    );
+  } else if (props.isLoading) {
+    textElem = <Spinner as="span" mr="2" />;
+  } else if (props.claimableAmount > 0) {
+    textElem = `Claim ${props.claimableAmount} ETH`;
+  } else {
+    textElem = 'Nothing to claim';
+  }
+
+  return (
+    <Button
+      mt="3"
+      onClick={props.onClick}
+      disabled={props.isLoading || props.isClaiming || !props.claimableAmount}
+    >
+      {textElem}
+    </Button>
+  );
+};
 
 export const CampaignCard = () => {
   const [verifiedData, setVerifiedData] = useState<{
@@ -205,7 +211,7 @@ export const CampaignCard = () => {
     <Box w="100%" borderWidth="1px" borderRadius="8" p="8" shadow="md">
       <VStack spacing="5" align="start" w="100%">
         <Heading size="lg">Swap three times in Görli Uniswap</Heading>
-        <Text textAlign="justify">
+        <Text>
           This is an example stamp rally campaign. It is just a boring stamp rally in a single
           protocol because of the limited availability of subgraphs in the Görli network.
           <br />
