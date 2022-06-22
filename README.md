@@ -8,7 +8,7 @@ The system offers a "stamp rally campaign" to users:
 
 - A stamp rally consists of multiple steps.
 - Each step has a specific goal condition (e.g., Swap ETH in xxx protocol) and reward amount.
-- When a user completes each step, The corresponding reward can be claimed.
+- When a user completes each step, he/she can claim corresponding reward.
 - Also, it is possible to claim rewards of multiple steps at one time to save gas costs.
 
 ## Components

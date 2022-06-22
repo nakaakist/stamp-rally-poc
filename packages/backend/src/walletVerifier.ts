@@ -8,7 +8,7 @@ const EIP712_DOMAIN_CHAIN_ID = 5;
 const CHAIN_NAME = 'goerli';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*', // should not be wildcard
   'Access-Control-Allow-Credentials': false,
 };
 
