@@ -1,5 +1,7 @@
 import { CheckCircleIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import {
+  Alert,
+  AlertIcon,
   Box,
   Button,
   Divider,
@@ -47,6 +49,25 @@ const Step = (props: {
   </>
 );
 
+const CurrentReward = (props: {
+  isLoading: boolean;
+  cumulativeAmount: string | null;
+  claimedAmount: string | null;
+}) => {
+  if (props.isLoading) {
+    return <Spinner />;
+  }
+
+  return (
+    <>
+      <Heading size="lg" as="span" mr="2">
+        {props.cumulativeAmount} ETH
+      </Heading>
+      <Text as="span"> / {props.claimedAmount} ETH already claimed</Text>
+    </>
+  );
+};
+
 const ClaimButton = (props: {
   onClick: () => void;
   isClaiming: boolean;
@@ -80,14 +101,14 @@ export const CampaignCard = () => {
     signature: string;
     completedStepNum: number;
   } | null>(null);
-  const [isVerifying, setIsVerifying] = useState<boolean>(true);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
   const [claimedAmount, setClaimedAmount] = useState<string | null>(null);
-  const [isGettingClaimedAmount, setIsGettingClaimedAmount] = useState<boolean>(true);
+  const [isGettingClaimedAmount, setIsGettingClaimedAmount] = useState<boolean>(false);
 
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
 
-  const { account } = useAccount();
+  const { account, isLoadingAccount } = useAccount();
   const { contract } = useDistributorContract();
 
   const claimableAmount =
@@ -220,25 +241,30 @@ export const CampaignCard = () => {
         <Divider />
 
         <VStack w="100%" align="flex-start" spacing="5">
-          <Box>
-            <Text>Your total reward now</Text>
-            {isVerifying || isGettingClaimedAmount ? (
-              <Spinner />
-            ) : (
-              <>
-                <Heading size="lg" as="span" mr="2">
-                  {verifiedData?.cumulativeAmount} ETH
-                </Heading>
-                <Text as="span"> / {claimedAmount} ETH already claimed</Text>
-              </>
-            )}
-          </Box>
-          <ClaimButton
-            onClick={claimReward}
-            isClaiming={isClaiming}
-            isLoading={isLoading}
-            claimableAmount={claimableAmount}
-          />
+          {account && (
+            <>
+              <Box>
+                <Text>Your total reward now</Text>
+                <CurrentReward
+                  isLoading={isLoading}
+                  cumulativeAmount={verifiedData?.cumulativeAmount || null}
+                  claimedAmount={claimedAmount}
+                />
+              </Box>
+              <ClaimButton
+                onClick={claimReward}
+                isClaiming={isClaiming}
+                isLoading={isLoading}
+                claimableAmount={claimableAmount}
+              />
+            </>
+          )}
+          {!isLoadingAccount && !account && (
+            <Alert status="warning">
+              <AlertIcon />
+              Connect wallet to check your reward
+            </Alert>
+          )}
         </VStack>
       </VStack>
     </Box>

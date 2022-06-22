@@ -2,12 +2,15 @@ import { atom, useAtom } from 'jotai';
 import { createToast } from '../utils/createToast';
 
 const accountAtom = atom<string | null>(null);
+const isLoadingAtom = atom<boolean>(true);
 
 export const useAccount = () => {
   const [account, setAccount] = useAtom(accountAtom);
+  const [isLoading, setIsLoading] = useAtom(isLoadingAtom);
 
   const checkWallet = async () => {
     try {
+      setIsLoading(true);
       const { ethereum } = window;
       if (!ethereum || !ethereum.request) return;
 
@@ -22,11 +25,14 @@ export const useAccount = () => {
         title: 'Failed to check account in MetaMask.',
         status: 'error',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const connectWallet = async () => {
     try {
+      setIsLoading(true);
       const { ethereum } = window;
       if (!ethereum || !ethereum.request) return;
 
@@ -46,11 +52,14 @@ export const useAccount = () => {
         title: 'Failed to connect wallet',
         status: 'error',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
     account,
+    isLoadingAccount: isLoading,
     connectWallet,
     checkWallet,
   };
