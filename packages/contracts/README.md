@@ -1,11 +1,17 @@
 # Contracts
 
+Reward distributor contract that processes reward claim from frontend.
+
+The contract uses the ECDSA whitelisting to verify if the claim is valid.
+
 ## References
 
 - https://docs.openzeppelin.com/learn/
 - https://blog.openzeppelin.com/workshop-recap-building-an-nft-merkle-drop/
 
 ## Commands
+
+A `.env` file is needed to run the commands.
 
 - `yarn test`: Run tests
 - `yarn start:local`: Start local network

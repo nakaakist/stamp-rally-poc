@@ -14,7 +14,6 @@ import {
 } from '@chakra-ui/react';
 import { utils } from 'ethers';
 import { ReactNode, useEffect, useState } from 'react';
-import { GAS_LIMIT, WALLET_VERIFIER_URL } from '../constants/constants';
 import { useAccount } from '../hooks/useAccount';
 import { useDistributorContract } from '../hooks/useDistributorContract';
 import { createToast } from '../utils/createToast';
@@ -100,7 +99,7 @@ export const CampaignCard = () => {
 
     try {
       setIsVerifying(true);
-      const res = await fetch(`${WALLET_VERIFIER_URL}/${account}`);
+      const res = await fetch(`${import.meta.env.VITE_WALLET_VERIFIER_URL}/${account}`);
       const data = await res.json();
 
       setVerifiedData({
@@ -145,7 +144,7 @@ export const CampaignCard = () => {
         utils.parseEther(verifiedData.cumulativeAmount),
         verifiedData.signature,
         {
-          gasLimit: GAS_LIMIT,
+          gasLimit: 200000,
         },
       );
 
