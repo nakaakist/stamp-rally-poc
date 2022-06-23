@@ -20,7 +20,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
   // generate a signature to authorize reward claim
   const signature = await getSignature({
-    signerPrivateKey: process.env.OWNER_PRIVATE_KEY || '',
+    signerPrivateKey: process.env.OWNER_PRIVATE_KEY || '', // Environment variable is not secure to store private key. Should use secret manager.
     eip712DomainName: EIP712_DOMAIN_NAME,
     eip712DomainVersion: EIP712_DOMAIN_VERSION,
     chainId: EIP712_DOMAIN_CHAIN_ID,

@@ -10,7 +10,6 @@ provider:
   environment:
     OWNER_PRIVATE_KEY: ${env:OWNER_PRIVATE_KEY}
     DISTRIBUTOR_ADDRESS: ${env:DISTRIBUTOR_ADDRESS}
-    CHAIN_ID: ${env:CHAIN_ID}
 
 plugins:
   - serverless-plugin-typescript

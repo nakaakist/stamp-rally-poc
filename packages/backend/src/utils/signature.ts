@@ -13,7 +13,7 @@ export const getSignature = async (params: {
   cumulativeAmount: BigNumber;
 }) => {
   const signer = new ethers.Wallet(
-    process.env.OWNER_PRIVATE_KEY || '', // Environment variable is not secure to store private key. Should use secret manager.
+    params.signerPrivateKey,
     ethers.getDefaultProvider(params.chainName),
   );
 
