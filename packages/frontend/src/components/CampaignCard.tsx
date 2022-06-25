@@ -17,13 +17,15 @@ import { ethers, utils } from 'ethers';
 import { ReactNode, useEffect, useState } from 'react';
 import { useAccount } from '../hooks/useAccount';
 import { createToast } from '../utils/createToast';
+import { getChainId } from '../utils/getChainId';
 
 const Step = (props: {
   stepNum: number;
   isLast?: boolean;
   achieved: boolean;
   description: ReactNode;
-  reward: string;
+  reward: number;
+  rewardToken: string;
 }) => (
   <>
     <ListItem w="100%">
@@ -37,7 +39,10 @@ const Step = (props: {
         />
         <Box w="100%">
           <Heading size="xs" display="block" mb="1">
-            {props.stepNum}. <Text as="span">({props.reward} reward)</Text>
+            {props.stepNum}.{' '}
+            <Text as="span">
+              ({props.reward} {props.rewardToken} reward)
+            </Text>
           </Heading>
           <Text>{props.description}</Text>
         </Box>
@@ -51,6 +56,7 @@ const CurrentReward = (props: {
   isLoading: boolean;
   cumulativeAmount: string | null;
   claimedAmount: string | null;
+  rewardToken: string;
 }) => {
   if (props.isLoading) {
     return <Spinner />;
@@ -59,9 +65,12 @@ const CurrentReward = (props: {
   return (
     <>
       <Heading size="lg" as="span" mr="2">
-        {props.cumulativeAmount} ETH
+        {props.cumulativeAmount} {props.rewardToken}
       </Heading>
-      <Text as="span"> / {props.claimedAmount} ETH already claimed</Text>
+      <Text as="span">
+        {' '}
+        / {props.claimedAmount} {props.rewardToken} already claimed
+      </Text>
     </>
   );
 };
@@ -71,6 +80,7 @@ const ClaimButton = (props: {
   isClaiming: boolean;
   isLoading: boolean;
   claimableAmount: number;
+  rewardToken: string;
 }) => {
   let textElem: ReactNode;
   if (props.isClaiming) {
@@ -83,7 +93,7 @@ const ClaimButton = (props: {
   } else if (props.isLoading) {
     textElem = <Spinner as="span" mr="2" />;
   } else if (props.claimableAmount > 0) {
-    textElem = `Claim ${props.claimableAmount} ETH`;
+    textElem = `Claim ${props.claimableAmount} ${props.rewardToken}`;
   } else {
     textElem = 'Nothing to claim';
   }
@@ -102,10 +112,12 @@ const ClaimButton = (props: {
 export const CampaignCard = (props: {
   title: string;
   description: ReactNode;
-  steps: { description: ReactNode; reward: string }[];
+  steps: { description: ReactNode; reward: number }[];
   campaignId: string;
   contract: ethers.Contract | null;
-  chainId: number;
+  chainId: string;
+  chainName: string;
+  rewardToken: string;
 }) => {
   const [verifiedData, setVerifiedData] = useState<{
     cumulativeAmount: string;
@@ -120,6 +132,8 @@ export const CampaignCard = (props: {
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
 
   const { account, isLoadingAccount } = useAccount();
+
+  const chainMatched = getChainId() === props.chainId;
 
   const claimableAmount =
     parseFloat(verifiedData?.cumulativeAmount || '0') - parseFloat(claimedAmount || '0');
@@ -153,7 +167,7 @@ export const CampaignCard = (props: {
   };
 
   const checkClaimedAmount = async () => {
-    if (!props.contract || !account) return;
+    if (!props.contract || !account || !chainMatched) return;
 
     try {
       setIsGettingClaimedAmount(true);
@@ -170,7 +184,7 @@ export const CampaignCard = (props: {
   };
 
   const claimReward = async () => {
-    if (!props.contract || !verifiedData) return;
+    if (!props.contract || !verifiedData || !chainMatched) return;
 
     try {
       setIsClaiming(true);
@@ -193,7 +207,7 @@ export const CampaignCard = (props: {
 
       createToast({
         title: 'Claim success!!',
-        description: `You've received ${claimableAmount} ETH`,
+        description: `You've received ${claimableAmount} ${props.rewardToken}`,
         status: 'success',
       });
     } catch (error) {
@@ -216,7 +230,7 @@ export const CampaignCard = (props: {
   }, [account, props.contract]);
 
   return (
-    <Box w="100%" borderWidth="1px" borderRadius="8" p="8" shadow="md">
+    <Box as="li" w="100%" borderWidth="1px" borderRadius="8" p="8" shadow="md" listStyleType="none">
       <VStack spacing="5" align="start" w="100%">
         <Heading size="lg">{props.title}</Heading>
         <Text>{props.description}</Text>
@@ -231,6 +245,7 @@ export const CampaignCard = (props: {
               achieved={(verifiedData?.completedStepNum || 0) > i}
               description={s.description}
               reward={s.reward}
+              rewardToken={props.rewardToken}
               isLast={i === 2}
             />
           ))}
@@ -239,7 +254,7 @@ export const CampaignCard = (props: {
         <Divider />
 
         <VStack w="100%" align="flex-start" spacing="5">
-          {account && (
+          {account && chainMatched && (
             <>
               <Box>
                 <Text>Your total reward now</Text>
@@ -247,6 +262,7 @@ export const CampaignCard = (props: {
                   isLoading={isLoading}
                   cumulativeAmount={verifiedData?.cumulativeAmount || null}
                   claimedAmount={claimedAmount}
+                  rewardToken={props.rewardToken}
                 />
               </Box>
               <ClaimButton
@@ -254,6 +270,7 @@ export const CampaignCard = (props: {
                 isClaiming={isClaiming}
                 isLoading={isLoading}
                 claimableAmount={claimableAmount}
+                rewardToken={props.rewardToken}
               />
             </>
           )}
@@ -261,6 +278,12 @@ export const CampaignCard = (props: {
             <Alert status="warning">
               <AlertIcon />
               Connect wallet to check your reward
+            </Alert>
+          )}
+          {account && !chainMatched && (
+            <Alert status="warning">
+              <AlertIcon />
+              Switch to {props.chainName} network to check claimable reward
             </Alert>
           )}
         </VStack>
