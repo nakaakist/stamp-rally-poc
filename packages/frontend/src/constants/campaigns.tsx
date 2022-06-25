@@ -7,7 +7,7 @@ export type Campaign = {
   steps: { description: ReactNode; reward: number }[];
   id: string;
   contractAddress: string;
-  chainId: string;
+  chainId: number;
   chainName: string;
   rewardToken: string;
 };
@@ -36,7 +36,7 @@ export const CAMPAIGNS: Campaign[] = [
     })),
     id: 'goerli-uniswap',
     contractAddress: import.meta.env.VITE_GOERLI_UNISWAP_DISTRIBUTOR_ADDRESS || '',
-    chainId: '5',
+    chainId: 5,
     chainName: 'Görli',
     rewardToken: 'ETH',
   },
@@ -60,7 +60,7 @@ export const CAMPAIGNS: Campaign[] = [
     })),
     id: 'mumbai-uniswap',
     contractAddress: import.meta.env.VITE_MUMBAI_UNISWAP_DISTRIBUTOR_ADDRESS || '',
-    chainId: '80001',
+    chainId: 80001,
     chainName: 'Mumbai',
     rewardToken: 'MATIC',
   },

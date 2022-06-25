@@ -117,7 +117,7 @@ export const CampaignCard = (props: {
   steps: { description: ReactNode; reward: number }[];
   campaignId: string;
   contract: ethers.Contract | null;
-  chainId: string;
+  chainId: number;
   chainName: string;
   rewardToken: string;
 }) => {
