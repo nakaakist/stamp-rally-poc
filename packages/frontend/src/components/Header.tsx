@@ -64,6 +64,7 @@ export const Header = () => (
     px="8"
     bg="white"
     borderBottomWidth="1px"
+    zIndex="2"
     shadow="md"
   >
     <Heading fontSize="xl">Stamp Rally PoC</Heading>
