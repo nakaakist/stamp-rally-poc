@@ -13,10 +13,12 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { ethers, utils } from 'ethers';
-import { ReactNode, useEffect, useState } from 'react';
+import { ethers } from 'ethers';
+import { ReactNode, useEffect } from 'react';
 import { useAccount } from '../hooks/useAccount';
-import { createToast } from '../utils/createToast';
+import { useClaim } from '../hooks/useClaim';
+import { useClaimedAmount } from '../hooks/useClaimedAmount';
+import { useVerifyWallet } from '../hooks/useVerifyWallet';
 import { getChainId } from '../utils/getChainId';
 
 const Step = (props: {
@@ -119,17 +121,14 @@ export const CampaignCard = (props: {
   chainName: string;
   rewardToken: string;
 }) => {
-  const [verifiedData, setVerifiedData] = useState<{
-    cumulativeAmount: string;
-    signature: string;
-    completedStepNum: number;
-  } | null>(null);
-  const [isVerifying, setIsVerifying] = useState<boolean>(false);
-
-  const [claimedAmount, setClaimedAmount] = useState<string | null>(null);
-  const [isGettingClaimedAmount, setIsGettingClaimedAmount] = useState<boolean>(false);
-
-  const [isClaiming, setIsClaiming] = useState<boolean>(false);
+  const { verify, verifiedData, isVerifying } = useVerifyWallet(props.campaignId);
+  const { claim, isClaiming } = useClaim({
+    contract: props.contract,
+    rewardToken: props.rewardToken,
+  });
+  const { checkClaimedAmount, claimedAmount, isLoadingClaimedAmount } = useClaimedAmount(
+    props.contract,
+  );
 
   const { account, isLoadingAccount } = useAccount();
 
@@ -137,88 +136,11 @@ export const CampaignCard = (props: {
 
   const claimableAmount =
     parseFloat(verifiedData?.cumulativeAmount || '0') - parseFloat(claimedAmount || '0');
-  const isLoading = isVerifying || isGettingClaimedAmount;
+  const isLoading = isVerifying || isLoadingClaimedAmount;
 
-  const verify = async () => {
-    if (!account) return;
-
-    try {
-      setIsVerifying(true);
-      const res = await fetch(
-        `${import.meta.env.VITE_WALLET_VERIFIER_URL}/campaigns/${
-          props.campaignId
-        }/accounts/${account}`,
-      );
-      const data = await res.json();
-
-      setVerifiedData({
-        cumulativeAmount: utils.formatEther(data.cumulativeAmount || '0'),
-        signature: data.signature || '',
-        completedStepNum: data.completedStepNum || 0,
-      });
-    } catch (error) {
-      createToast({
-        title: 'Failed to check reward eligibility',
-        status: 'error',
-      });
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const checkClaimedAmount = async () => {
-    if (!props.contract || !account || !chainMatched) return;
-
-    try {
-      setIsGettingClaimedAmount(true);
-      const amount: number = await props.contract.cumulativeClaimedAmounts(account);
-      setClaimedAmount(utils.formatEther(amount));
-    } catch (error) {
-      createToast({
-        title: 'Failed to check claimed amount',
-        status: 'error',
-      });
-    } finally {
-      setIsGettingClaimedAmount(false);
-    }
-  };
-
-  const claimReward = async () => {
-    if (!props.contract || !verifiedData || !chainMatched) return;
-
-    try {
-      setIsClaiming(true);
-      const tx = await props.contract.claim(
-        account,
-        utils.parseEther(verifiedData.cumulativeAmount),
-        verifiedData.signature,
-        {
-          gasLimit: 200000,
-        },
-      );
-
-      createToast({
-        title: 'Claim submitted',
-        description: 'Please wait...',
-        status: 'success',
-      });
-
-      await tx.wait();
-
-      createToast({
-        title: 'Claim success!!',
-        description: `You've received ${claimableAmount} ${props.rewardToken}`,
-        status: 'success',
-      });
-    } catch (error) {
-      createToast({
-        title: 'Failed to claim reward',
-        status: 'error',
-      });
-    } finally {
-      setIsClaiming(false);
-      await Promise.all([verify(), checkClaimedAmount()]);
-    }
+  const onClickClaim = async () => {
+    await claim({ claimableAmount, verifiedData });
+    await checkClaimedAmount();
   };
 
   useEffect(() => {
@@ -226,8 +148,8 @@ export const CampaignCard = (props: {
   }, [account]);
 
   useEffect(() => {
-    checkClaimedAmount();
-  }, [account, props.contract]);
+    if (chainMatched) checkClaimedAmount();
+  }, [account, props.contract, chainMatched]);
 
   return (
     <Box as="li" w="100%" borderWidth="1px" borderRadius="8" p="8" shadow="md" listStyleType="none">
@@ -266,7 +188,7 @@ export const CampaignCard = (props: {
                 />
               </Box>
               <ClaimButton
-                onClick={claimReward}
+                onClick={onClickClaim}
                 isClaiming={isClaiming}
                 isLoading={isLoading}
                 claimableAmount={claimableAmount}
