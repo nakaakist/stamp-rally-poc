@@ -22,6 +22,6 @@ functions:
     handler: src/walletVerifier.handler
     events:
       - http:
-          path: /campaigns/{campaignId}/addresses/{address}
+          path: /campaigns/{campaignId}/accounts/{account}
           method: get
           cors: true

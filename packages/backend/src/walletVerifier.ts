@@ -9,7 +9,7 @@ const corsHeaders = {
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   const campaignId = event.pathParameters?.campaignId || '';
-  const account = event.pathParameters?.address || '';
+  const account = event.pathParameters?.account || '';
 
   if (!(CAMPAIGN_IDS as readonly string[]).includes(campaignId)) {
     return {

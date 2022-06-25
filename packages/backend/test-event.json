@@ -1,6 +1,6 @@
 {
-  "resource": "/campaigns/{campaignId}/addresses/{address}",
-  "path": "/campaigns/mumbai-uniswap/addresses/0xd35ae4c64c1ad955fd2ebcfb77721700b8064294",
+  "resource": "/campaigns/{campaignId}/accounts/{account}",
+  "path": "/campaigns/mumbai-uniswap/accounts/0xd35ae4c64c1ad955fd2ebcfb77721700b8064294",
   "httpMethod": "GET",
   "headers": {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -64,16 +64,16 @@
   "multiValueQueryStringParameters": null,
   "pathParameters": {
     "campaignId": "mumbai-uniswap",
-    "address": "0xd35ae4c64c1ad955fd2ebcfb77721700b8064294"
+    "account": "0xd35ae4c64c1ad955fd2ebcfb77721700b8064294"
   },
   "stageVariables": null,
   "requestContext": {
     "resourceId": "79skwu",
-    "resourcePath": "/campaigns/{campaignId}/addresses/{address}",
+    "resourcePath": "/campaigns/{campaignId}/accounts/{account}",
     "httpMethod": "GET",
     "extendedRequestId": "UQh1qFMEtjMFTYA=",
     "requestTime": "25/Jun/2022:03:11:44 +0000",
-    "path": "/dev/campaigns/mumbai-uniswap/addresses/0xd35ae4c64c1ad955fd2ebcfb77721700b8064294",
+    "path": "/dev/campaigns/mumbai-uniswap/accounts/0xd35ae4c64c1ad955fd2ebcfb77721700b8064294",
     "accountId": "152377991297",
     "protocol": "HTTP/1.1",
     "stage": "dev",
