@@ -147,11 +147,11 @@ export const CampaignCard = (props: {
 
   useEffect(() => {
     verify();
-  }, []);
+  }, [account, chainId]);
 
   useEffect(() => {
     checkClaimedAmount();
-  }, []);
+  }, [account, chainId]);
 
   return (
     <Box as="li" w="100%" borderWidth="1px" borderRadius="8" p="8" shadow="md" listStyleType="none">
