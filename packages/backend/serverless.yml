@@ -8,8 +8,10 @@ provider:
   runtime: nodejs16.x
   region: ap-northeast-1
   environment:
-    OWNER_PRIVATE_KEY: ${env:OWNER_PRIVATE_KEY}
-    DISTRIBUTOR_ADDRESS: ${env:DISTRIBUTOR_ADDRESS}
+    GOERLI_UNISWAP_OWNER_PRIVATE_KEY: ${env:GOERLI_UNISWAP_OWNER_PRIVATE_KEY}
+    GOERLI_UNISWAP_DISTRIBUTOR_ADDRESS: ${env:GOERLI_UNISWAP_DISTRIBUTOR_ADDRESS}
+    MUMBAI_UNISWAP_OWNER_PRIVATE_KEY: ${env:MUMBAI_UNISWAP_OWNER_PRIVATE_KEY}
+    MUMBAI_UNISWAP_DISTRIBUTOR_ADDRESS: ${env:MUMBAI_UNISWAP_DISTRIBUTOR_ADDRESS}
 
 plugins:
   - serverless-plugin-typescript
@@ -20,6 +22,6 @@ functions:
     handler: src/walletVerifier.handler
     events:
       - http:
-          path: /{address}
+          path: /campaigns/{campaignId}/addresses/{address}
           method: get
           cors: true

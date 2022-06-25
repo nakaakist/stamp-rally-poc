@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
-import { CampaignRewardCalculator } from '../types';
+import { CampaignConfig, CampaignRewardCalculator } from '.';
 
 const START_TIMESTAMP = 1655748913;
 const REWARD_PER_SWAP = ethers.utils.parseEther('0.001');
@@ -10,7 +10,7 @@ const MAX_SWAP_COUNT = 3;
  * Calculate the reward for uniswap swaps.
  * The reward is (REWARD_PER_SWAP) * MIN(n_swaps, MAX_SWAP_COUNT).
  */
-export const uniswapRewardCalculator: CampaignRewardCalculator = async (account: string) => {
+export const goerliUniswapRewardCalculator: CampaignRewardCalculator = async (account: string) => {
   const uniswapEndpoint = 'https://api.thegraph.com/subgraphs/name/compositelabs/uniswap-v3-goerli';
 
   const uniswapQuery = `
@@ -48,4 +48,15 @@ export const uniswapRewardCalculator: CampaignRewardCalculator = async (account:
   const amount = BigNumber.from(Math.min(MAX_SWAP_COUNT, completedStepNum)).mul(REWARD_PER_SWAP);
 
   return { amount, completedStepNum };
+};
+
+export const goerliUniswapConfigs: CampaignConfig = {
+  contract: {
+    address: process.env.GOERLI_UNISWAP_DISTRIBUTOR_ADDRESS || '',
+    ownerPrivateKey: process.env.GOERLI_UNISWAP_OWNER_PRIVATE_KEY || '', // Environment variable is not secure to store private key. Should use secret manager.
+    eip712DomainName: 'stamp-rally-poc',
+    eip712DomainVersion: '0.0.1',
+    eip712DomainChainId: 5,
+  },
+  rewardCalculator: goerliUniswapRewardCalculator,
 };

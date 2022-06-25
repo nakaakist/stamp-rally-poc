@@ -1,11 +1,6 @@
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-import { uniswapRewardCalculator } from './campaigns/uniswap';
+import { CAMPAIGN_CONFIGS, CAMPAIGN_IDS } from './campaigns';
 import { getSignature } from './utils/signature';
-
-const EIP712_DOMAIN_NAME = 'stamp-rally-poc';
-const EIP712_DOMAIN_VERSION = '0.0.1';
-const EIP712_DOMAIN_CHAIN_ID = 5;
-const CHAIN_NAME = 'goerli';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // should not be wildcard
@@ -13,19 +8,29 @@ const corsHeaders = {
 };
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+  const campaignId = event.pathParameters?.campaignId || '';
   const account = event.pathParameters?.address || '';
 
+  if (!(CAMPAIGN_IDS as readonly string[]).includes(campaignId)) {
+    return {
+      statusCode: 404,
+      body: JSON.stringify({ message: 'campaign not found' }),
+      headers: corsHeaders,
+    };
+  }
+
+  const { contract, rewardCalculator } = CAMPAIGN_CONFIGS[campaignId];
+
   // calculate the cumulative reward amount
-  const { amount: cumulativeAmount, completedStepNum } = await uniswapRewardCalculator(account);
+  const { amount: cumulativeAmount, completedStepNum } = await rewardCalculator(account);
 
   // generate a signature to authorize reward claim
   const signature = await getSignature({
-    signerPrivateKey: process.env.OWNER_PRIVATE_KEY || '', // Environment variable is not secure to store private key. Should use secret manager.
-    eip712DomainName: EIP712_DOMAIN_NAME,
-    eip712DomainVersion: EIP712_DOMAIN_VERSION,
-    chainId: EIP712_DOMAIN_CHAIN_ID,
-    chainName: CHAIN_NAME,
-    distributorAddress: process.env.DISTRIBUTOR_ADDRESS || '',
+    signerPrivateKey: contract.ownerPrivateKey,
+    eip712DomainName: contract.eip712DomainName,
+    eip712DomainVersion: contract.eip712DomainVersion,
+    chainId: contract.eip712DomainChainId,
+    distributorAddress: contract.address,
     account: account,
     cumulativeAmount,
   });

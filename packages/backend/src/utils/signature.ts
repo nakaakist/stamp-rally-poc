@@ -7,15 +7,11 @@ export const getSignature = async (params: {
   eip712DomainName: string;
   eip712DomainVersion: string;
   chainId: number;
-  chainName: string;
   distributorAddress: string;
   account: string;
   cumulativeAmount: BigNumber;
 }) => {
-  const signer = new ethers.Wallet(
-    params.signerPrivateKey,
-    ethers.getDefaultProvider(params.chainName),
-  );
+  const signer = new ethers.Wallet(params.signerPrivateKey, ethers.getDefaultProvider());
 
   const signature = await signer._signTypedData(
     // Domain
