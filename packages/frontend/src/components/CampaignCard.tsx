@@ -6,7 +6,6 @@ import {
   Button,
   Divider,
   Heading,
-  Link,
   List,
   ListIcon,
   ListItem,
@@ -14,10 +13,9 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { utils } from 'ethers';
+import { ethers, utils } from 'ethers';
 import { ReactNode, useEffect, useState } from 'react';
 import { useAccount } from '../hooks/useAccount';
-import { useDistributorContract } from '../hooks/useDistributorContract';
 import { createToast } from '../utils/createToast';
 
 const Step = (props: {
@@ -101,7 +99,14 @@ const ClaimButton = (props: {
   );
 };
 
-export const CampaignCard = () => {
+export const CampaignCard = (props: {
+  title: string;
+  description: ReactNode;
+  steps: { description: ReactNode; reward: string }[];
+  campaignId: string;
+  contract: ethers.Contract | null;
+  chainId: number;
+}) => {
   const [verifiedData, setVerifiedData] = useState<{
     cumulativeAmount: string;
     signature: string;
@@ -115,7 +120,6 @@ export const CampaignCard = () => {
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
 
   const { account, isLoadingAccount } = useAccount();
-  const { contract } = useDistributorContract();
 
   const claimableAmount =
     parseFloat(verifiedData?.cumulativeAmount || '0') - parseFloat(claimedAmount || '0');
@@ -127,7 +131,9 @@ export const CampaignCard = () => {
     try {
       setIsVerifying(true);
       const res = await fetch(
-        `${import.meta.env.VITE_WALLET_VERIFIER_URL}/campaigns/goerli-uniswap/accounts/${account}`,
+        `${import.meta.env.VITE_WALLET_VERIFIER_URL}/campaigns/${
+          props.campaignId
+        }/accounts/${account}`,
       );
       const data = await res.json();
 
@@ -147,11 +153,11 @@ export const CampaignCard = () => {
   };
 
   const checkClaimedAmount = async () => {
-    if (!contract || !account) return;
+    if (!props.contract || !account) return;
 
     try {
       setIsGettingClaimedAmount(true);
-      const amount: number = await contract.cumulativeClaimedAmounts(account);
+      const amount: number = await props.contract.cumulativeClaimedAmounts(account);
       setClaimedAmount(utils.formatEther(amount));
     } catch (error) {
       createToast({
@@ -164,11 +170,11 @@ export const CampaignCard = () => {
   };
 
   const claimReward = async () => {
-    if (!contract || !verifiedData) return;
+    if (!props.contract || !verifiedData) return;
 
     try {
       setIsClaiming(true);
-      const tx = await contract.claim(
+      const tx = await props.contract.claim(
         account,
         utils.parseEther(verifiedData.cumulativeAmount),
         verifiedData.signature,
@@ -207,40 +213,24 @@ export const CampaignCard = () => {
 
   useEffect(() => {
     checkClaimedAmount();
-  }, [account, contract]);
+  }, [account, props.contract]);
 
   return (
     <Box w="100%" borderWidth="1px" borderRadius="8" p="8" shadow="md">
       <VStack spacing="5" align="start" w="100%">
-        <Heading size="lg">Swap three times in Görli Uniswap</Heading>
-        <Text>
-          This is an example stamp rally campaign. It is just a boring stamp rally in a single
-          protocol because of the limited availability of subgraphs in the Görli network.
-          <br />
-          However, it can be easily extended to cross-protocol with appropriate subgraphs.
-        </Text>
+        <Heading size="lg">{props.title}</Heading>
+        <Text>{props.description}</Text>
 
         <Divider />
 
         <List spacing="1" w="100%">
-          {[...Array(3)].map((_, i) => (
+          {props.steps.map((s, i) => (
             <Step
               key={i}
               stepNum={i + 1}
               achieved={(verifiedData?.completedStepNum || 0) > i}
-              description={
-                <>
-                  Swap any amount of ETH to UNI in{' '}
-                  <Link
-                    href="https://app.uniswap.org/#/swap?chain=goerli"
-                    isExternal
-                    color="blue.500"
-                  >
-                    Görli Uniswap
-                  </Link>
-                </>
-              }
-              reward="0.001 ETH"
+              description={s.description}
+              reward={s.reward}
               isLast={i === 2}
             />
           ))}
