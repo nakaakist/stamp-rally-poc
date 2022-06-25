@@ -1,5 +1,6 @@
 import { Link } from '@chakra-ui/react';
 import { ReactNode } from 'react';
+import { Chain, GOERLI_CHAIN, MUMBAI_CHAIN } from './chains';
 
 export type Campaign = {
   title: string;
@@ -7,8 +8,7 @@ export type Campaign = {
   steps: { description: ReactNode; reward: number }[];
   id: string;
   contractAddress: string;
-  chainId: number;
-  chainName: string;
+  chain: Chain;
   rewardToken: string;
 };
 
@@ -36,8 +36,7 @@ export const CAMPAIGNS: Campaign[] = [
     })),
     id: 'goerli-uniswap',
     contractAddress: import.meta.env.VITE_GOERLI_UNISWAP_DISTRIBUTOR_ADDRESS || '',
-    chainId: 5,
-    chainName: 'Görli',
+    chain: GOERLI_CHAIN,
     rewardToken: 'ETH',
   },
   {
@@ -60,8 +59,7 @@ export const CAMPAIGNS: Campaign[] = [
     })),
     id: 'mumbai-uniswap',
     contractAddress: import.meta.env.VITE_MUMBAI_UNISWAP_DISTRIBUTOR_ADDRESS || '',
-    chainId: 80001,
-    chainName: 'Mumbai',
+    chain: MUMBAI_CHAIN,
     rewardToken: 'MATIC',
   },
 ];

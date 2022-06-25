@@ -9,6 +9,7 @@ export const CampaignList = () => {
     <VStack as="ul" spacing="4" mb="8">
       {CAMPAIGNS.map((c) => (
         <CampaignCard
+          key={c.id}
           title={c.title}
           description={c.description}
           steps={c.steps}
@@ -17,8 +18,8 @@ export const CampaignList = () => {
             address: c.contractAddress,
             abi,
           })}
-          chainId={c.chainId}
-          chainName={c.chainName}
+          chainId={c.chain.id}
+          chainName={c.chain.name}
           rewardToken={c.rewardToken}
         />
       ))}

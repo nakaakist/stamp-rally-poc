@@ -16,10 +16,10 @@ import {
 import { ethers } from 'ethers';
 import { ReactNode, useEffect } from 'react';
 import { useAccount } from '../hooks/useAccount';
+import { useChain } from '../hooks/useChain';
 import { useClaim } from '../hooks/useClaim';
 import { useClaimedAmount } from '../hooks/useClaimedAmount';
 import { useVerifyWallet } from '../hooks/useVerifyWallet';
-import { getChainId } from '../utils/getChainId';
 
 const Step = (props: {
   stepNum: number;
@@ -129,10 +129,10 @@ export const CampaignCard = (props: {
   const { checkClaimedAmount, claimedAmount, isLoadingClaimedAmount } = useClaimedAmount(
     props.contract,
   );
-
   const { account, isLoadingAccount } = useAccount();
+  const { chainId } = useChain();
 
-  const chainMatched = getChainId() === props.chainId;
+  const chainMatched = chainId === props.chainId;
 
   const claimableAmount =
     parseFloat(verifiedData?.cumulativeAmount || '0') - parseFloat(claimedAmount || '0');
