@@ -125,10 +125,12 @@ export const CampaignCard = (props: {
   const { claim, isClaiming } = useClaim({
     contract: props.contract,
     rewardToken: props.rewardToken,
+    chainId: props.chainId,
   });
-  const { checkClaimedAmount, claimedAmount, isLoadingClaimedAmount } = useClaimedAmount(
-    props.contract,
-  );
+  const { checkClaimedAmount, claimedAmount, isLoadingClaimedAmount } = useClaimedAmount({
+    contract: props.contract,
+    chainId: props.chainId,
+  });
   const { account, isLoadingAccount } = useAccount();
   const { chainId } = useChain();
 
@@ -145,11 +147,11 @@ export const CampaignCard = (props: {
 
   useEffect(() => {
     verify();
-  }, [account]);
+  }, []);
 
   useEffect(() => {
-    if (chainMatched) checkClaimedAmount();
-  }, [account, props.contract, chainMatched]);
+    checkClaimedAmount();
+  }, []);
 
   return (
     <Box as="li" w="100%" borderWidth="1px" borderRadius="8" p="8" shadow="md" listStyleType="none">

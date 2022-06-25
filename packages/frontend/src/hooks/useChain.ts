@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { CHAINS } from '../constants/chains';
 
-const getChainId = (): number | null => {
+export const getChainId = (): number | null => {
   try {
     const { ethereum } = window;
     const chainId = (ethereum as any)?.networkVersion;

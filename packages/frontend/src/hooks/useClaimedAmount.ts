@@ -4,7 +4,7 @@ import { createToast } from '../utils/createToast';
 import { useAccount } from './useAccount';
 import { useChain } from './useChain';
 
-export const useClaimedAmount = (contract: ethers.Contract | null) => {
+export const useClaimedAmount = (params: { contract: ethers.Contract | null; chainId: number }) => {
   const [claimedAmount, setClaimedAmount] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -12,15 +12,13 @@ export const useClaimedAmount = (contract: ethers.Contract | null) => {
   const { chainId } = useChain();
 
   const checkClaimedAmount = async () => {
-    if (!contract || !account) return;
+    if (!params.contract || !account || params.chainId !== chainId) return;
 
     try {
       setIsLoading(true);
-      const amount: number = await contract.cumulativeClaimedAmounts(account);
+      const amount: number = await params.contract.cumulativeClaimedAmounts(account);
       setClaimedAmount(utils.formatEther(amount));
     } catch (error) {
-      console.error(error);
-      console.error(contract, account, chainId);
       createToast({
         title: 'Failed to check claimed amount',
         status: 'error',

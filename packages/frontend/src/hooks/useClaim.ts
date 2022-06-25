@@ -2,12 +2,18 @@ import { ethers, utils } from 'ethers';
 import { useState } from 'react';
 import { useAccount } from '../hooks/useAccount';
 import { createToast } from '../utils/createToast';
+import { useChain } from './useChain';
 import { VerifiedData } from './useVerifyWallet';
 
-export const useClaim = (params: { contract: ethers.Contract | null; rewardToken: string }) => {
+export const useClaim = (params: {
+  contract: ethers.Contract | null;
+  rewardToken: string;
+  chainId: number;
+}) => {
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
 
   const { account } = useAccount();
+  const { chainId } = useChain();
 
   const claim = async ({
     claimableAmount,
@@ -16,7 +22,7 @@ export const useClaim = (params: { contract: ethers.Contract | null; rewardToken
     claimableAmount: number;
     verifiedData: VerifiedData | null;
   }) => {
-    if (!params.contract || !verifiedData) return;
+    if (!params.contract || !verifiedData || params.chainId !== chainId) return;
 
     try {
       setIsClaiming(true);
