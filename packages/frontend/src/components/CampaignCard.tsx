@@ -126,7 +126,9 @@ export const CampaignCard = () => {
 
     try {
       setIsVerifying(true);
-      const res = await fetch(`${import.meta.env.VITE_WALLET_VERIFIER_URL}/${account}`);
+      const res = await fetch(
+        `${import.meta.env.VITE_WALLET_VERIFIER_URL}/campaigns/goerli-uniswap/accounts/${account}`,
+      );
       const data = await res.json();
 
       setVerifiedData({
