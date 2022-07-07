@@ -21,3 +21,5 @@ The system consists of the following three components
   - Lambda function to verify how many steps a user completed and to generate a signature of the verification result.
 - Reward distributor contract
   - Smart contract to receive reward claim request and to pay reward if the request is valid. The contract uses the signature that backend generates for the validation of the claim. (ECDSA whitelisting)
+
+![Components](./img/components.png)
