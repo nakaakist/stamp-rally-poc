@@ -1,5 +1,7 @@
 # Stamp rally PoC
 
+[![test](https://github.com/nakaakist/stamp-rally-poc/actions/workflows/ci.yml/badge.svg)](https://github.com/nakaakist/stamp-rally-poc/actions/workflows/ci.yml)
+
 ## About
 
 This repository is a test project of a stamp rally system in ethereum.
